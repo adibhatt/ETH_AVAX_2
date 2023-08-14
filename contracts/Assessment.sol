@@ -7,12 +7,39 @@ contract Assessment {
     address payable public owner;
     uint256 public balance;
 
+     struct OwnerDetails {
+        string name;
+        address accountAddress;
+        uint256 accountBalance;
+    }
+
+    OwnerDetails public ownerDetails;
+
     event Deposit(uint256 amount);
     event Withdraw(uint256 amount);
+    event OwnerDetailsUpdated(string newName);
 
-    constructor(uint initBalance) payable {
+    constructor(uint initBalance, string memory initialName) payable {
         owner = payable(msg.sender);
         balance = initBalance;
+        ownerDetails.name = initialName;
+        ownerDetails.accountAddress = owner;
+        ownerDetails.accountBalance = initBalance;
+    }
+
+    function verifyPin(uint256 _pin) public pure returns (bool) {
+        uint256 validPin = 5501;
+        return _pin == validPin;
+    }
+
+    function getOwnerDetails() public view returns (OwnerDetails memory) {
+        return ownerDetails;
+    }
+
+    function updateOwnerDetails(string memory newName) public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        ownerDetails.name = newName;
+        emit OwnerDetailsUpdated(newName);
     }
 
     function getBalance() public view returns(uint256){
@@ -57,4 +84,6 @@ contract Assessment {
         // emit the event
         emit Withdraw(_withdrawAmount);
     }
+
+
 }

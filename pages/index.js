@@ -7,8 +7,12 @@ export default function HomePage() {
   const [account, setAccount] = useState(undefined);
   const [atm, setATM] = useState(undefined);
   const [balance, setBalance] = useState(undefined);
+  const [ownerDetails, setOwnerDetails] = useState({});
+  const [pin, setPin] = useState("");
+  const [pinVerified, setPinVerified] = useState(false);
+  const [pinError, setPinError] = useState(false);
 
-  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
   const atmABI = atm_abi.abi;
 
   const getWallet = async() => {
@@ -75,6 +79,53 @@ export default function HomePage() {
     }
   }
 
+  //My functions
+  const getOwnerDetails = async () => {
+    if (atm) {
+      try {
+        const details = await atm.getOwnerDetails();
+        setOwnerDetails(details);
+      } catch (error) {
+        console.error("Error fetching owner details:", error);
+      }
+    }
+  };
+  const updateOwnerDetails = async (newName) => {
+    if (atm) {
+      try {
+        const tx = await atm.updateOwnerDetails(newName);
+        await tx.wait();
+        getOwnerDetails();
+      } catch (error) {
+        console.error("Error updating owner details:", error);
+      }
+    }
+  };
+  const updateOwnerDetailsPrompt = async () => {
+    const newName = prompt("Enter the new owner's name:");
+    if (newName !== null) {
+      await updateOwnerDetails(newName);
+      await getOwnerDetails();
+    }
+  };
+
+  //second function
+  const verifyPin = async () => {
+    if (atm && pin) {
+      try {
+        const isVerified = await atm.verifyPin(pin);
+        setPinVerified(isVerified);
+        setPinError(!isVerified); // Reset the pin error state
+      } catch (error) {
+        console.error(error);
+        setPinError(true); // Set the pin error state
+      }
+    }
+  };
+  const handlePinChange = (event) => {
+    setPin(event.target.value);
+  };
+
   const initUser = () => {
     // Check to see if user has Metamask
     if (!ethWallet) {
@@ -96,6 +147,14 @@ export default function HomePage() {
         <p>Your Balance: {balance}</p>
         <button onClick={deposit}>Deposit 1 ETH</button>
         <button onClick={withdraw}>Withdraw 1 ETH</button>
+        <p>Owner Name: {ownerDetails.name}</p>
+        <button onClick={updateOwnerDetailsPrompt}>Update Owner Name</button>
+        <div>
+          <input type="text" value={pin} onChange={handlePinChange} placeholder="Enter PIN" />
+          <button onClick={verifyPin}>Verify PIN</button>
+          {pinError && <p className="error">Incorrect PIN. Please try again.</p>}
+          {pinVerified && !pinError && <p>PIN is verified</p>}
+        </div>
       </div>
     )
   }
@@ -104,7 +163,7 @@ export default function HomePage() {
 
   return (
     <main className="container">
-      <header><h1>Welcome to the Metacrafters ATM!</h1></header>
+      <header><h1>Welcome to the ADITYA Custom ATM!</h1></header>
       {initUser()}
       <style jsx>{`
         .container {
